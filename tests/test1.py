@@ -53,30 +53,9 @@ def parseBatch(rawBatch, screenPos=0):
 
 bestBatch = None
 while bestBatch == None:
-
-	# Refresh 2
-	batchesAvailable = False
-	while not batchesAvailable:
-		vc.dump(sleep=0)
-
-		try:
-			status = vc.findViewByIdOrRaise("com.instacart.shopper:id/is_dashboardVirtualBatchStatus_title").getText();
-			if status.count("available!") == 1:
-				# batches are available
-				print("Found available batches")
-				batchesAvailable = True
-		except:
-			print("Oops, too fast")
-			vc.dump(sleep=0)
-			vc.findViewById("com.instacart.shopper:id/is_batchAcceptanceEarningsEstimate_declineBtn").touch()
-			time.sleep(0.1)
-		device.drag((350, 350), (350, 950), 50, 20, 0)
-
-	vc.findViewByIdOrRaise("com.instacart.shopper:id/is_dashboardVirtualBatchStatus_title").touch()
 	# Refresh
-	# if SCROLL: device.drag((330, 350), (330, 950), 50, 20, 0) # if scroll is on, re-scroll up first to top of page to refresh
-	# time.sleep(0.05)
-	# device.drag((330, 350), (330, 950), 50, 20, 0)
+	if SCROLL: device.drag((330, 350), (330, 950), 50, 20, 0) # if scroll is on, re-scroll up first to top of page to refresh
+	device.drag((330, 350), (330, 950), 50, 20, 0)
 
 	vc.dump(sleep=0)
 
@@ -85,6 +64,9 @@ while bestBatch == None:
 		# vc.findViewById("com.instacart.shopper:id/is_virtualBatchList_list")
 		print("No batches exist")
 		vc.findViewByIdOrRaise("id/no_id/3").touch()
+		time.sleep(3)
+		device.touch(330, 340, 0)
+		time.sleep(0.5)
 		continue
 
 	# Scrape & Parse Batch List
@@ -145,7 +127,6 @@ while bestBatch == None:
 			device.drag((330, 350), (330, 950), 50, 20, 0)
 	else:
 		print("No good batches found out of " + str(len(batchList)) + " batches")
-		vc.findViewByIdOrRaise("id/no_id/3").touch()
 
 # Outside of while loop
 if bestBatch != None:
