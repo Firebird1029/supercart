@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 
 import time
+import os
+import urllib2
 
 try:
 	sys.path.append(os.path.join(os.environ['ANDROID_VIEW_CLIENT_HOME'], 'src'))
@@ -14,9 +16,9 @@ print("Setup complete")
 
 DEBUG = False
 SCROLL = True
-MIN_EARNINGS = 30.0 # float, minimum batch payout
-MAX_ORDERS = 2 # int, maximum full service orders (trips)
-MAX_MILES = 11.0 # float, maximum driving distance
+MIN_EARNINGS = 40.0 # float, minimum batch payout
+MAX_ORDERS = 1 # int, maximum full service orders (trips)
+MAX_MILES = 10.0 # float, maximum driving distance
 MAX_ITEMS = 30 # int, maximum items
 MAX_UNITS = 32 # int, maximum units -- batch must fulfill MAX_ITEMS and MAX_UNITS, not or
 ONE_CITY = True # bool, only pick batches in certain city
@@ -135,7 +137,12 @@ if bestBatch != None:
 	device.touch(330, bestBatch["y"], 0)
 
 	# Swipe to Accept Batch
-	time.sleep(0.8)
+	time.sleep(1) # or 1.5?
+	device.takeSnapshot().save("screenshot.png", "PNG") # TODO REMOVE LATER
 	# device.drag((100, 1350), (660, 1350), 45, 20, 0)
+
+# Call my Number to Notify
+response = urllib2.urlopen(os.environ["WEBHOOK_ENDPOINT"])
+response.close()
 
 print("Done")
