@@ -66,9 +66,8 @@ while bestBatch == None:
 		# vc.findViewById("com.instacart.shopper:id/is_virtualBatchList_list")
 		print("No batches exist")
 		vc.findViewByIdOrRaise("id/no_id/3").touch()
-		time.sleep(3)
+		time.sleep(2.5)
 		device.touch(330, 340, 0)
-		time.sleep(0.5)
 		continue
 
 	# Scrape & Parse Batch List
