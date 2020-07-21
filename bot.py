@@ -17,8 +17,6 @@ try:
 	sys.path.append(os.path.join(os.environ['ANDROID_VIEW_CLIENT_HOME'], 'src'))
 except:
 	pass
-
-
 from com.dtmilano.android.viewclient import ViewClient
 device, serialno = ViewClient.connectToDeviceOrExit()
 vc = ViewClient(device, serialno)
@@ -27,6 +25,7 @@ print("Setup complete")
 DEBUG = False
 SCROLL = False
 
+# Test Case 1
 MIN_EARNINGS = 40.0 # float, minimum batch payout
 MAX_ORDERS = 2 # int, maximum full service orders (trips)
 MAX_MILES = 11.0 # float, maximum driving distance
@@ -35,16 +34,23 @@ MAX_UNITS = 32 # int, maximum units -- batch must fulfill MAX_ITEMS and MAX_UNIT
 ONE_CITY = True # bool, only pick batches in certain city
 MY_CITY = "Honolulu" # string, only pick batches in certain city
 
-# Scroll up to refresh
-# device.drag((330, 350), (330, 950), 50, 20, 0)
-# device.dragDip((150.0, 200.0), (150.0, 400.0), 40, 20, 0)
-# vc.findViewByIdOrRaise(u"com.instacart.shopper:id/fragment_dashboard_native_card_recyclerview").uiScrollable.flingBackward()
+# Test Case 2
+MIN_EARNINGS = 40.0
+MAX_ORDERS = 2
+MAX_MILES = 11.0
+MAX_ITEMS = 29
+MAX_UNITS = 32
+ONE_CITY = True
+MY_CITY = "Honolulu"
 
-# Touch
-# vc.findViewWithTextOrRaise(u'Order now').touch()
-
-# Swipe
-# device.drag((100, 1350), (660, 1350), 45, 20, 0)
+# Test Case 3
+MIN_EARNINGS = 40.0
+MAX_ORDERS = 2
+MAX_MILES = 11.0
+MAX_ITEMS = 29
+MAX_UNITS = 32
+ONE_CITY = True
+MY_CITY = "Honolulu"
 
 def parseBatch(rawBatch, screenPos=0):
 		batchDetails = {"screenPos": screenPos, "y": rawBatch.getY() + 25}
