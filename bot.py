@@ -1,5 +1,9 @@
 #! /usr/bin/env python
 
+DEBUG = False
+SCROLL = False
+COP = True
+
 import time
 import datetime
 import os
@@ -12,6 +16,8 @@ except:
 	print("WEBHOOK_ENDPOINT not setup yet!")
 	exit()
 
+print("Cop: " + str(COP))
+
 # Setup AndroidViewClient
 try:
 	sys.path.append(os.path.join(os.environ['ANDROID_VIEW_CLIENT_HOME'], 'src'))
@@ -22,35 +28,43 @@ device, serialno = ViewClient.connectToDeviceOrExit()
 vc = ViewClient(device, serialno)
 print("Setup complete")
 
-DEBUG = False
-SCROLL = False
-
-# Test Case 1
-MIN_EARNINGS = 40.0 # float, minimum batch payout
+# Test Case 1 -- $40+
+MIN_EARNINGS = 39.0 # float, minimum batch payout
 MAX_ORDERS = 2 # int, maximum full service orders (trips)
-MAX_MILES = 11.0 # float, maximum driving distance
-MAX_ITEMS = 29 # int, maximum items
+MAX_MILES = 14.9 # float, maximum driving distance
+MAX_ITEMS = 29 # int, maximum items # 30
 MAX_UNITS = 32 # int, maximum units -- batch must fulfill MAX_ITEMS and MAX_UNITS, not or
 ONE_CITY = True # bool, only pick batches in certain city
-MY_CITY = "Honolulu" # string, only pick batches in certain city
+MY_CITY = "honolulu" # string, only pick batches in certain city
 
-# Test Case 2
-MIN_EARNINGS = 40.0
-MAX_ORDERS = 2
-MAX_MILES = 11.0
-MAX_ITEMS = 29
-MAX_UNITS = 32
-ONE_CITY = True
-MY_CITY = "Honolulu"
+# Test Case 2 -- Small Order
+MIN_EARNINGS_2 = 30.0
+MAX_ORDERS_2 = 2
+MAX_MILES_2 = 12.9
+MAX_ITEMS_2 = 9
+MAX_UNITS_2 = 18
+ONE_CITY_2 = True
+MY_CITY_2 = "honolulu"
 
-# Test Case 3
-MIN_EARNINGS = 40.0
-MAX_ORDERS = 2
-MAX_MILES = 11.0
-MAX_ITEMS = 29
-MAX_UNITS = 32
-ONE_CITY = True
-MY_CITY = "Honolulu"
+# Test Case 3 -- Mega Order
+MIN_EARNINGS_3 = 70.0
+MAX_ORDERS_3 = 3
+MAX_MILES_3 = 30.9
+MAX_ITEMS_3 = 40
+MAX_UNITS_3 = 45
+ONE_CITY_3 = True
+MY_CITY_3 = "honolulu"
+
+"""
+# Test Case 3 -- Prescription/Tiny Order
+MIN_EARNINGS_3 = 17.0
+MAX_ORDERS_3 = 1
+MAX_MILES_3 = 10.9
+MAX_ITEMS_3 = 1
+MAX_UNITS_3 = 4
+ONE_CITY_3 = True
+MY_CITY_3 = "Honolulu"
+"""
 
 def parseBatch(rawBatch, screenPos=0):
 		batchDetails = {"screenPos": screenPos, "y": rawBatch.getY() + 25}
@@ -67,7 +81,7 @@ def parseBatch(rawBatch, screenPos=0):
 		batchDetails["items"] = int(rawBatchDetails[6][:rawBatchDetails[6].index(" i")]) # " 5 items / 12 units" --> 5
 		batchDetails["units"] = int(rawBatchDetails[6][rawBatchDetails[6].index("/") + 2:rawBatchDetails[6].index(" u")]) # " 5 items / 12 units" --> 12
 		batchDetails["location"] = rawBatchDetails[8]
-		batchDetails["city"] = batchDetails["location"][:batchDetails["location"].index(", HI")] # "Honolulu, HI\n..." --> "Honolulu"
+		batchDetails["city"] = batchDetails["location"][:batchDetails["location"].index(", HI")].lower() # "Honolulu, HI\n..." --> "honolulu"
 		return batchDetails
 
 def prettyPrintBatch(batch):
@@ -76,7 +90,9 @@ def prettyPrintBatch(batch):
 bestBatch = None
 while bestBatch == None:
 	# Refresh
-	if SCROLL: device.drag((330, 350), (330, 950), 60, 20, 0) # if scroll is on, re-scroll up first to top of page to refresh
+	if SCROLL:
+		device.drag((330, 165), (330, 1250), 100, 30, 0) # if scroll is on, re-scroll up first to top of page to refresh
+		time.sleep(0.1)
 	device.drag((330, 165), (330, 1250), 50, 20, 0)
 
 	vc.dump(sleep=0)
@@ -135,6 +151,9 @@ while bestBatch == None:
 	# Find Highest Paying Batch that Fulfills Requirements
 	batchList.sort(key=lambda batch: batch["earnings"], reverse=True) # sort batch list by higest earnings to lowest earnings
 	bestBatchIndex = -1
+
+	# Test Case 1
+	if DEBUG: print("Test Case 1")
 	for i, batch in enumerate(batchList):
 		if DEBUG: print("CHECKING", batch)
 		if batch["earnings"] < MIN_EARNINGS:
@@ -151,15 +170,55 @@ while bestBatch == None:
 		bestBatchIndex = i # set index of successfully found batch
 		break
 
+	# Test Case 2
+	if DEBUG: print("Test Case 2")
+	if bestBatchIndex == -1:
+		for i, batch in enumerate(batchList):
+			if DEBUG: print("CHECKING", batch)
+			if batch["earnings"] < MIN_EARNINGS_2:
+				break # break not continue because batchList is sorted, all other batches are lower payout
+			if batch["orders"] > MAX_ORDERS_2:
+				continue
+			if batch["miles"] > MAX_MILES_2:
+				continue
+			if batch["items"] > MAX_ITEMS_2 or batch["units"] > MAX_UNITS_2:
+				continue
+			if ONE_CITY_2 and batch["city"].count(MY_CITY_2) == 0:
+				# handles "San Fran" and "San Fran (Cali County)"
+				continue
+			bestBatchIndex = i # set index of successfully found batch
+			break
+
+	# Test Case 3
+	if DEBUG: print("Test Case 3")
+	if bestBatchIndex == -1:
+		for i, batch in enumerate(batchList):
+			if DEBUG: print("CHECKING", batch)
+			if batch["earnings"] < MIN_EARNINGS_3:
+				break # break not continue because batchList is sorted, all other batches are lower payout
+			if batch["orders"] > MAX_ORDERS_3:
+				continue
+			if batch["miles"] > MAX_MILES_3:
+				continue
+			if batch["items"] > MAX_ITEMS_3 or batch["units"] > MAX_UNITS_3:
+				continue
+			if ONE_CITY_3 and batch["city"].count(MY_CITY_3) == 0:
+				# handles "San Fran" and "San Fran (Cali County)"
+				continue
+			bestBatchIndex = i # set index of successfully found batch
+			break
+
 	if bestBatchIndex > -1:
 		print("FOUND", datetime.datetime.now().strftime("%m-%d %I-%M-%S %p"))
 		bestBatch = batchList[bestBatchIndex]
 
 		# if scroll was enabled and batch was at top of screen, need to re-scroll up
 		if SCROLL and bestBatch["screenPos"] == 0 and len(batchList) >= 3:
-			device.drag((330, 350), (330, 950), 50, 20, 0)
+			device.drag((330, 165), (330, 1250), 100, 30, 0)
+			time.sleep(0.1)
 	else:
-		print("No good batches found out of " + str(len(batchList)) + " batches", [prettyPrintBatch(batch) for batch in batchList])
+		print(datetime.datetime.now().strftime("%m-%d %I-%M-%S %p"), [prettyPrintBatch(batch) for batch in batchList])
+		# print("No good batches found out of " + str(len(batchList)) + " batches", [prettyPrintBatch(batch) for batch in batchList])
 
 # Outside of while loop
 if bestBatch != None:
@@ -168,9 +227,11 @@ if bestBatch != None:
 	device.touch(330, bestBatch["y"], 0)
 
 	# Swipe to Accept Batch
-	time.sleep(1) # or 1.5?
+	time.sleep(1)
 	device.takeSnapshot().save("batch " + datetime.datetime.now().strftime("%m-%d %I-%M-%S %p") + ".png", "PNG")
-	# device.drag((100, 1350), (660, 1350), 50, 20, 0)
+	if COP:
+		for i in range(5):
+			device.drag((100, 1350), (660, 1350), 50, 20, 0)
 
 # Call my Number to Notify
 response = urllib2.urlopen(os.environ["WEBHOOK_ENDPOINT"])
