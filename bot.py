@@ -66,6 +66,7 @@ ONE_CITY_3 = True
 MY_CITY_3 = "Honolulu"
 """
 
+# Scrape a view card found by AndroidViewClient into a dict
 def parseBatch(rawBatch, screenPos=0):
 		batchDetails = {"screenPos": screenPos, "y": rawBatch.getY() + 25}
 		rawBatchDetails = [detail.getText() for detail in rawBatch.getChildren()] # scrape batch card
@@ -84,6 +85,7 @@ def parseBatch(rawBatch, screenPos=0):
 		batchDetails["city"] = batchDetails["location"][:batchDetails["location"].index(", HI")].lower() # "Honolulu, HI\n..." --> "honolulu"
 		return batchDetails
 
+# Show Batch Details Nicely
 def prettyPrintBatch(batch):
 	return "$" + str(batch["earnings"]) + " " + str(batch["orders"]) + " " + str(batch["miles"]) + " mi " + str(batch["items"]) + "/" + str(batch["units"]) + " " + batch["city"][:3]
 
@@ -104,13 +106,13 @@ while bestBatch == None:
 		vc.findViewByIdOrRaise("id/no_id/3").touch()
 		time.sleep(1.5)
 		device.touch(330, 340, 0) # y: 340 without promo header, y: 475 with promo header
-		continue
+		continue # jump to top of main while loop
 
 	# Scrape & Parse Batch List
 	batchList = []
 	batchListElement = None
 
-	# Error management
+	# Error Management
 	try:
 		batchListElement = vc.findViewByIdOrRaise("com.instacart.shopper:id/is_virtualBatchList_list")
 	except:
@@ -118,18 +120,19 @@ while bestBatch == None:
 		print("Error: Unable to find is_virtualBatchList_list view, assuming on home screen, attempting to auto-fix...")
 		vc.dump(sleep=0)
 		vc.findViewByIdOrRaise("com.instacart.shopper:id/is_dashboardVirtualBatchStatus_title").touch()
-		continue
+		continue # jump to top of main while loop
 
+	# Parse Batch List
 	for rawBatch in batchListElement.getChildren():
 		batchDetails = parseBatch(rawBatch)
 		if batchDetails == None:
-			continue
+			# if corrupted parsed batch, do not add to batch list
+			continue # jump to next raw batch
 
-		# Assume not duplicate since top of screen
 		if DEBUG: print(batchDetails)
-		batchList.append(batchDetails)
+		batchList.append(batchDetails) # Assume not duplicate since top of screen
 
-	# Scroll to Bottom (Hacky)
+	# Scroll to Bottom if Scroll is Enabled
 	if SCROLL and len(batchList) >= 3:
 		# 4 batches would mean there MIGHT be additional batches, 3 batches means there might be additional batches too due to "Due to limited batches in your area..." header
 		device.drag((330, 1340), (330, 310), 100, 20, 0)
@@ -140,9 +143,9 @@ while bestBatch == None:
 		for rawBatch in vc.findViewByIdOrRaise("com.instacart.shopper:id/is_virtualBatchList_list").getChildren():
 			batchDetails = parseBatch(rawBatch, 1)
 			if batchDetails == None:
-				continue
+				continue # jump to next raw batch
 
-			# Check for duplicate
+			# Check for duplicate in batch list, since scrolling might show the same batches
 			if next((batch for batch in batchList if batch["earnings"] == batchDetails["earnings"] and batch["miles"] == batchDetails["miles"] and batch["units"] == batchDetails["units"]), None) == None:
 				# not a duplicate
 				if DEBUG: print(batchDetails)
@@ -209,14 +212,16 @@ while bestBatch == None:
 			break
 
 	if bestBatchIndex > -1:
+		# Batch found
 		print("FOUND", datetime.datetime.now().strftime("%m-%d %I-%M-%S %p"))
 		bestBatch = batchList[bestBatchIndex]
 
-		# if scroll was enabled and batch was at top of screen, need to re-scroll up
+		# if scroll was enabled and found batch was at top of screen, need to re-scroll up
 		if SCROLL and bestBatch["screenPos"] == 0 and len(batchList) >= 3:
 			device.drag((330, 165), (330, 1250), 100, 30, 0)
 			time.sleep(0.1)
 	else:
+		# No good batches found
 		print(datetime.datetime.now().strftime("%m-%d %I-%M-%S %p"), [prettyPrintBatch(batch) for batch in batchList])
 		# print("No good batches found out of " + str(len(batchList)) + " batches", [prettyPrintBatch(batch) for batch in batchList])
 
@@ -224,16 +229,17 @@ while bestBatch == None:
 if bestBatch != None:
 	# Found highest paying batch that fulfills requirements
 	print(bestBatch)
-	device.touch(330, bestBatch["y"], 0)
+	device.touch(330, bestBatch["y"], 0) # click on the batch
 
 	# Swipe to Accept Batch
 	time.sleep(1)
-	device.takeSnapshot().save("batch " + datetime.datetime.now().strftime("%m-%d %I-%M-%S %p") + ".png", "PNG")
+	device.takeSnapshot().save("batch " + datetime.datetime.now().strftime("%m-%d %I-%M-%S %p") + ".png", "PNG") # save a screenshot, also adds in extra delay
 	if COP:
 		for i in range(5):
-			device.drag((100, 1350), (660, 1350), 50, 20, 0)
+			# swipe multiple times in case batch screen loads slow
+			device.drag((100, 1350), (660, 1350), 50, 20, 0) # swipe action
 
-# Call my Number to Notify
+# Send Notification Thru 3rd Party API
 response = urllib2.urlopen(os.environ["WEBHOOK_ENDPOINT"])
 response.close()
 
