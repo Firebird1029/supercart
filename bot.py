@@ -80,6 +80,15 @@ ONE_CITY_3 = True
 MY_CITY_3 = "Honolulu"
 """
 
+# ViewClient Screen Dump Helper Function
+def screenDump(vc=vc):
+	try:
+		vc.dump(sleep=0)
+		return 0
+	except:
+		print("Fatal Error: ViewClient dump failed. Please restart app.")
+		return 1
+
 # Scrape a view card found by AndroidViewClient into a dict
 def parseBatch(rawBatch, screenPos=0):
 		batchDetails = {"screenPos": screenPos, "y": rawBatch.getY() + 25}
@@ -101,7 +110,7 @@ def parseBatch(rawBatch, screenPos=0):
 		batchDetails["store"] = batchDetails["location"][batchDetails["location"].index("\n")+1:batchDetails["location"].index(" ", batchDetails["location"].index("\n"))].lower()
 		return batchDetails
 
-# Show Batch Details Nicely
+# Print Batch Details Nicely to CLI
 def prettyPrintBatch(batch):
 	return "$" + str(batch["earnings"]) + " " + str(batch["items"]) + "/" + str(batch["units"]) + " " + str(batch["miles"]) + " mi " + str(batch["orders"]) + " " + batch["city"][:3] + " " + batch["store"][:3]
 
@@ -113,7 +122,7 @@ while bestBatch == None:
 		time.sleep(0.1)
 	device.drag((330, 165), (330, 1250), 50, 20, 0)
 
-	vc.dump(sleep=0)
+	if screenDump() > 0: break # dump screen, exit program if dump fails
 
 	# Check if Batches Exist
 	if (vc.findViewById("com.instacart.shopper:id/is_virtualBatchList_emptyState_text")):
@@ -133,9 +142,13 @@ while bestBatch == None:
 		batchListElement = vc.findViewByIdOrRaise("com.instacart.shopper:id/is_virtualBatchList_list")
 	except:
 		# Can't find virtual batch list, probably stuck on home screen
-		print("Error: Unable to find is_virtualBatchList_list view, assuming on home screen, attempting to auto-fix...")
-		vc.dump(sleep=0)
-		vc.findViewByIdOrRaise("com.instacart.shopper:id/is_dashboardVirtualBatchStatus_title").touch()
+		print("Error: Unable to find is_virtualBatchList_list view, attempting to auto-fix...")
+		if screenDump() > 0: break # dump screen, exit program if dump fails
+		try:
+			vc.findViewByIdOrRaise("com.instacart.shopper:id/is_dashboardVirtualBatchStatus_title").touch()
+		except:
+			print("Fatal Error: Failed to auto-fix. Unknown app state.")
+			break # exit program
 		continue # jump to top of main while loop
 
 	# Parse Batch List
@@ -153,7 +166,7 @@ while bestBatch == None:
 		# 4 batches would mean there MIGHT be additional batches, 3 batches means there might be additional batches too due to "Due to limited batches in your area..." header
 		device.drag((330, 1340), (330, 310), 100, 20, 0)
 
-		vc.dump(sleep=0)
+		if screenDump() > 0: break # dump screen, exit program if dump fails
 
 		# Parse Batch List Again
 		for rawBatch in vc.findViewByIdOrRaise("com.instacart.shopper:id/is_virtualBatchList_list").getChildren():
