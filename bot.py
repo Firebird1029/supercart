@@ -7,9 +7,19 @@ import datetime
 import urllib2
 
 # Bot Setup
-DEBUG = "-d" in sys.argv or "--debug" in sys.argv
+DEBUG = "-v" in sys.argv or "--verbose" in sys.argv
 SCROLL = "-s" in sys.argv or "--scroll" in sys.argv
 COP = "-c" in sys.argv or "--cop" in sys.argv
+
+# Help Screen
+if "-h" in sys.argv or "--help" in sys.argv:
+	print("bot.py requires Python 2.7.")
+	print("Usage: python bot.py [-opts]")
+	print("\nOptions:")
+	print("-c, --cop\tTurn on cop mode to auto-accept found batches, default: Off")
+	print("-s, --scroll\tTurn on scroll mode to detect 4+ batches, default: Off")
+	print("-v, --verbose\tTurn on debugging mode, default: Off")
+	exit()
 
 # Confirm Env Vars
 try:
@@ -53,7 +63,7 @@ MY_CITY_2 = "honolulu"
 # Test Case 3 -- Mega Order
 MIN_EARNINGS_3 = 70.0
 MAX_ORDERS_3 = 3
-MAX_MILES_3 = 30.9
+MAX_MILES_3 = 18.9
 MAX_ITEMS_3 = 40
 MAX_UNITS_3 = 45
 ONE_CITY_3 = True
@@ -86,12 +96,14 @@ def parseBatch(rawBatch, screenPos=0):
 		batchDetails["items"] = int(rawBatchDetails[6][:rawBatchDetails[6].index(" i")]) # " 5 items / 12 units" --> 5
 		batchDetails["units"] = int(rawBatchDetails[6][rawBatchDetails[6].index("/") + 2:rawBatchDetails[6].index(" u")]) # " 5 items / 12 units" --> 12
 		batchDetails["location"] = rawBatchDetails[8]
-		batchDetails["city"] = batchDetails["location"][:batchDetails["location"].index(", HI")].lower() # "Honolulu, HI\n..." --> "honolulu"
+		batchDetails["city"] = batchDetails["location"][:batchDetails["location"].index(", HI")].lower() # "San Fran, CA\n..." --> "san fran"
+		# "San Fran, CA\nCostco..." --> "costco", "Sam's Club" --> "sam's"
+		batchDetails["store"] = batchDetails["location"][batchDetails["location"].index("\n")+1:batchDetails["location"].index(" ", batchDetails["location"].index("\n"))].lower()
 		return batchDetails
 
 # Show Batch Details Nicely
 def prettyPrintBatch(batch):
-	return "$" + str(batch["earnings"]) + " " + str(batch["orders"]) + " " + str(batch["miles"]) + " mi " + str(batch["items"]) + "/" + str(batch["units"]) + " " + batch["city"][:3]
+	return "$" + str(batch["earnings"]) + " " + str(batch["items"]) + "/" + str(batch["units"]) + " " + str(batch["miles"]) + " mi " + str(batch["orders"]) + " " + batch["city"][:3] + " " + batch["store"][:3]
 
 bestBatch = None
 while bestBatch == None:
