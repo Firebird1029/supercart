@@ -1,21 +1,25 @@
 #! /usr/bin/env python
 
-DEBUG = False
-SCROLL = False
-COP = True
-
+import sys
+import os
 import time
 import datetime
-import os
 import urllib2
 
-# Make sure Env Vars are Setup
+# Bot Setup
+DEBUG = "-d" in sys.argv or "--debug" in sys.argv
+SCROLL = "-s" in sys.argv or "--scroll" in sys.argv
+COP = "-c" in sys.argv or "--cop" in sys.argv
+
+# Confirm Env Vars
 try:
 	print("WEBHOOK ENDPOINT: " + os.environ["WEBHOOK_ENDPOINT"])
 except:
 	print("WEBHOOK_ENDPOINT not setup yet!")
 	exit()
 
+print("Debug: " + str(DEBUG))
+print("Scroll: " + str(SCROLL))
 print("Cop: " + str(COP))
 
 # Setup AndroidViewClient
