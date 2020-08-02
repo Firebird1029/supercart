@@ -23,7 +23,8 @@ if "-h" in sys.argv or "--help" in sys.argv:
 
 # Confirm Env Vars
 try:
-	print("WEBHOOK ENDPOINT: " + os.environ["WEBHOOK_ENDPOINT"])
+	endpoint = os.environ["WEBHOOK_ENDPOINT"]
+	if DEBUG: print("WEBHOOK ENDPOINT: " + endpoint)
 except:
 	print("WEBHOOK_ENDPOINT not setup yet!")
 	exit()
@@ -85,6 +86,9 @@ def screenDump(vc=vc):
 	try:
 		vc.dump(sleep=0)
 		return 0
+	except KeyboardInterrupt:
+		print("\nStopped program by keyboard interruption.")
+		exit()
 	except:
 		print("Fatal Error: ViewClient dump failed. Please restart app.")
 		return 1
@@ -266,7 +270,8 @@ if bestBatch != None:
 	if COP:
 		for i in range(5):
 			# swipe multiple times in case batch screen loads slow
-			device.drag((100, 1350), (660, 1350), 50, 20, 0) # swipe action
+			device.drag((100, 1350), (630, 1350), 50, 20, 0) # swipe action
+			time.sleep(0.15)
 
 # Send Notification Thru 3rd Party API
 response = urllib2.urlopen(os.environ["WEBHOOK_ENDPOINT"])
