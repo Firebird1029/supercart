@@ -10,6 +10,7 @@ import urllib2
 DEBUG = "-v" in sys.argv or "--verbose" in sys.argv
 SCROLL = "-s" in sys.argv or "--scroll" in sys.argv
 COP = "-c" in sys.argv or "--cop" in sys.argv
+PROMO = "-p" in sys.argv or "--promo" in sys.argv
 
 # Help Screen
 if "-h" in sys.argv or "--help" in sys.argv:
@@ -18,6 +19,7 @@ if "-h" in sys.argv or "--help" in sys.argv:
 	print("\nOptions:")
 	print("-c, --cop\tTurn on cop mode to auto-accept found batches, default: Off")
 	print("-s, --scroll\tTurn on scroll mode to detect 4+ batches, default: Off")
+	print("-p, --promo\tTurn on promo mode if promotion banners exist, default: Off")
 	print("-v, --verbose\tTurn on debugging mode, default: Off")
 	exit()
 
@@ -32,6 +34,7 @@ except:
 print("Debug: " + str(DEBUG))
 print("Scroll: " + str(SCROLL))
 print("Cop: " + str(COP))
+print("Promo: " + str(PROMO))
 
 # Setup AndroidViewClient
 try:
@@ -133,7 +136,7 @@ while bestBatch == None:
 		# vc.findViewById("com.instacart.shopper:id/is_virtualBatchList_list")
 		print("No batches exist")
 		vc.findViewByIdOrRaise("id/no_id/3").touch()
-		time.sleep(1.5)
+		time.sleep(5)
 		device.touch(330, 340, 0) # y: 340 without promo header, y: 475 with promo header
 		continue # jump to top of main while loop
 
@@ -166,7 +169,7 @@ while bestBatch == None:
 		batchList.append(batchDetails) # Assume not duplicate since top of screen
 
 	# Scroll to Bottom if Scroll is Enabled
-	if SCROLL and len(batchList) >= 3:
+	if SCROLL and len(batchList) >= (3 if not PROMO else 2):
 		# 4 batches would mean there MIGHT be additional batches, 3 batches means there might be additional batches too due to "Due to limited batches in your area..." header
 		device.drag((330, 1340), (330, 310), 100, 20, 0)
 
@@ -250,7 +253,7 @@ while bestBatch == None:
 		bestBatch = batchList[bestBatchIndex]
 
 		# if scroll was enabled and found batch was at top of screen, need to re-scroll up
-		if SCROLL and bestBatch["screenPos"] == 0 and len(batchList) >= 3:
+		if SCROLL and bestBatch["screenPos"] == 0 and len(batchList) >= (3 if not PROMO else 2):
 			device.drag((330, 165), (330, 1250), 100, 30, 0)
 			time.sleep(0.1)
 	else:
@@ -269,8 +272,11 @@ if bestBatch != None:
 	device.takeSnapshot().save("batch " + datetime.datetime.now().strftime("%m-%d %I-%M-%S %p") + ".png", "PNG") # save a screenshot, also adds in extra delay
 	if COP:
 		for i in range(5):
-			# swipe multiple times in case batch screen loads slow
-			device.drag((100, 1350), (630, 1350), 50, 20, 0) # swipe action
+			try:
+				# swipe multiple times in case batch screen loads slow
+				device.drag((100, 1450), (630, 1450), 50, 20, 0) # swipe action
+			except:
+				print("Drag {} failed".format(i))
 			time.sleep(0.15)
 
 # Send Notification Thru 3rd Party API
