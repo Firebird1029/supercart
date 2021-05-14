@@ -1,0 +1,13 @@
+- https://github.com/dtmilano/AndroidViewClient
+    + https://github.com/dtmilano/AndroidViewClient/wiki
+    + https://github.com/dtmilano/AndroidViewClient/wiki/Culebra-GUI
+- https://dtmilano.github.io/AndroidViewClient/
+    + https://dtmilano.github.io/AndroidViewClient/com.dtmilano.android.viewclient.View-class.html
+- https://developer.android.com/studio/command-line/adb
+- https://stackoverflow.com/questions/31374085/installing-adb-on-macos
+- https://forum.xda-developers.com/general/xda-university/guide-python-automation-using-dtmilanos-t3274345/amp/
+- Extra
+    + https://stackoverflow.com/questions/8653516/python-list-of-dictionaries-search/8653568
+    + https://ifttt.com/maker_webhooks
+        - https://stackoverflow.com/questions/645312/what-is-the-quickest-way-to-http-get-in-python
+    * https://github.com/dtmilano/CulebraTester2-public
